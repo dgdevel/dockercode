@@ -16,15 +16,24 @@ RUN pacman -Sy --noconfirm python python-pip uv go rustup
 
 # opencode deps
 RUN pacman -Sy --noconfirm nodejs npm bun
-
 COPY root/. /
-
-VOLUME [ "/home/coder" ]
 
 RUN useradd -d /home/coder -M -s /usr/bin/bash coder
 RUN echo 'coder ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 USER coder
+WORKDIR /home/coder
+RUN git clone https://aur.archlinux.org/yay.git
+WORKDIR /home/coder/yay
+RUN makepkg -cs --noconfirm
+USER root
+WORKDIR /home/coder/yay
+RUN pacman -U --noconfirm yay-*.tar.zst
+
+USER coder
+WORKDIR /home/coder
+
+VOLUME [ "/home/coder" ]
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

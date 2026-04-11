@@ -14,6 +14,7 @@ cd /home/coder
 # update opencode
 bun add opencode-ai
 bun add skills
+bun add add-mcp
 
 # launch user shell
 bash $*
