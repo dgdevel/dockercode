@@ -1,0 +1,18 @@
+
+services:
+  dockercode:
+    build: .
+    image: dockercode
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./homedir:/home/coder
+    environment:
+      - TERM=${TERM}
+      - COLUMNS=${COLUMNS}
+      - LINES=${LINES}
+    ports:
+      - "127.0.0.1:4096:4096"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
