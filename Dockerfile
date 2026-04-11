@@ -11,6 +11,9 @@ RUN pacman -Sy --noconfirm git
 # dev utils - archives
 RUN pacman -Sy --noconfirm unzip gzip
 
+# dev utils - lang misc and package managers
+RUN pacman -Sy --noconfirm python python-pip uv go rustup
+
 # opencode deps
 RUN pacman -Sy --noconfirm nodejs npm bun
 
