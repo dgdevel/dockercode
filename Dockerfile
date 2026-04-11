@@ -18,5 +18,10 @@ COPY root/. /
 
 VOLUME [ "/home/coder" ]
 
+RUN useradd -d /home/coder -M -s /usr/bin/bash coder
+RUN echo 'coder ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+USER coder
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

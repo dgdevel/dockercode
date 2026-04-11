@@ -5,6 +5,7 @@ A Docker container for running [opencode](https://opencode.ai) with a preconfigu
 ## What's included
 
 - **Base:** Arch Linux
+- **User:** `coder` user created at build time with passwordless sudo
 - **Dev utilities:** vim, htop, tmux, curl, wget, git, unzip, gzip
 - **Networking tools:** tcpdump, bind, iputils, net-tools
 - **opencode dependencies:** Node.js, npm, Bun
@@ -18,7 +19,7 @@ A Docker container for running [opencode](https://opencode.ai) with a preconfigu
 bin/build.sh
 ```
 
-Starts Docker if needed, prunes unused data, and builds the image via `docker compose build`.
+Starts Docker if needed, and builds the image.
 
 ### Run the container
 
@@ -26,7 +27,8 @@ Starts Docker if needed, prunes unused data, and builds the image via `docker co
 bin/run.sh [command]
 ```
 
-Starts Docker if needed, sets terminal dimensions, and opens an interactive shell (or runs an optional command) inside the container. The `homedir/` directory is mounted as the container's `/home/coder` volume, so your work persists across runs.
+Starts Docker if needed, and opens an interactive shell (or runs an optional command) inside the container.  
+The `homedir/` directory is mounted as the container's `/home/coder` volume, so your work persists across runs.
 
 Port `4096` is forwarded to `localhost:4096`.
 
