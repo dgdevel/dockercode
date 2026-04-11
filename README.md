@@ -32,6 +32,15 @@ The `homedir/` directory is mounted as the container's `/home/coder` volume, so 
 
 Port `4096` is forwarded to `localhost:4096`.
 
+### Shell into the running container
+
+```sh
+bin/shell.sh
+```
+
+Opens an interactive bash shell inside the running `dockercode` container.  
+Fails with an error if the container is not currently running.
+
 ### Export the image
 
 ```sh
@@ -43,7 +52,7 @@ Exports the built image as a compressed `dockercode.tar.xz` archive in the curre
 ## Project layout
 
 ```
-bin/          Helper scripts (build, run, export)
+bin/          Helper scripts (build, run, shell, export)
 homedir/      Persistent home directory mounted at /home/coder
 root/         Files copied into the image (entrypoint script)
 Dockerfile    Image definition
