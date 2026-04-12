@@ -41,6 +41,14 @@ bin/shell.sh
 Opens an interactive bash shell inside the running `dockercode` container.  
 Fails with an error if the container is not currently running.
 
+### Clean up
+
+```sh
+bin/clean.sh
+```
+
+Removes the `dockercode:latest` image and prunes unused Docker data.
+
 ### Export the image
 
 ```sh
@@ -52,7 +60,7 @@ Exports the built image as a compressed `dockercode.tar.xz` archive in the curre
 ## Project layout
 
 ```
-bin/          Helper scripts (build, run, shell, export)
+bin/          Helper scripts (build, run, shell, clean, export)
 homedir/      Persistent home directory mounted at /home/coder
 root/         Files copied into the image (entrypoint script)
 Dockerfile    Image definition
