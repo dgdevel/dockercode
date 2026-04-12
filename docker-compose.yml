@@ -15,4 +15,7 @@ services:
       - "127.0.0.1:4096:4096"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    dns:
+      - 1.1.1.1
+
 
