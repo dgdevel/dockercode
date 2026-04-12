@@ -1,21 +1,22 @@
 FROM archlinux:base-devel
+RUN pacman -Syu --noconfirm
 # sudo
-RUN pacman -Sy --noconfirm sudo
+RUN pacman -S --noconfirm sudo
 
 # dev utils - generic
-RUN pacman -Sy --noconfirm vim htop tmux
+RUN pacman -S --noconfirm vim htop tmux
 # dev utils - networking
-RUN pacman -Sy --noconfirm curl wget ca-certificates ca-certificates-mozilla ca-certificates-utils tcpdump bind iputils net-tools
+RUN pacman -S --noconfirm curl wget ca-certificates ca-certificates-mozilla ca-certificates-utils tcpdump bind iputils net-tools
 # dev utils - versioning
-RUN pacman -Sy --noconfirm git
+RUN pacman -S --noconfirm git
 # dev utils - archives
-RUN pacman -Sy --noconfirm unzip gzip
+RUN pacman -S --noconfirm unzip gzip
 
 # dev utils - lang misc and package managers
-RUN pacman -Sy --noconfirm python python-pip uv go rustup
+RUN pacman -S --noconfirm python python-pip uv go rustup
 
 # opencode deps
-RUN pacman -Sy --noconfirm nodejs npm bun
+RUN pacman -S --noconfirm nodejs npm bun
 COPY root/. /
 
 RUN useradd -d /home/coder -M -s /usr/bin/bash coder
@@ -23,12 +24,17 @@ RUN echo 'coder ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 USER coder
 WORKDIR /home/coder
-RUN git clone https://aur.archlinux.org/yay.git
-WORKDIR /home/coder/yay
+RUN git clone https://aur.archlinux.org/auracle-git.git
+WORKDIR /home/coder/auracle-git
 RUN makepkg -cs --noconfirm
 USER root
-WORKDIR /home/coder/yay
-RUN pacman -U --noconfirm yay-*.tar.zst
+RUN pacman -U --noconfirm auracle-git-*.tar.zst
+USER coder
+RUN auracle clone pacaur
+WORKDIR /home/coder/auracle-git/pacaur
+RUN makepkg -cs --noconfirm
+USER root
+RUN pacman -U --noconfirm pacaur-*.tar.zst
 
 USER coder
 WORKDIR /home/coder
