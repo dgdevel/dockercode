@@ -36,6 +36,10 @@ RUN makepkg -cs --noconfirm
 USER root
 RUN pacman -U --noconfirm pacaur-*.tar.zst
 
+WORKDIR /
+# DO NOT REMOVE: REPLACED BY BUILD SCRIPT
+INCLUDED_EXTENSION
+
 USER coder
 WORKDIR /home/coder
 
