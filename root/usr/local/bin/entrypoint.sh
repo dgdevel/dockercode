@@ -2,9 +2,9 @@
 
 # entrypoint.sh will run as coder user
 
-sudo chown -R coder:users /home/coder
 # user setup
 if [ ! -f /home/coder/.bashrc ] ; then
+  sudo chown -R coder:coder /home/coder
   find /etc/skel/ -type f -exec cp '{}' /home/coder \;
   echo 'PATH=$PATH:$HOME/node_modules/.bin/' >> /home/coder/.bashrc
 fi

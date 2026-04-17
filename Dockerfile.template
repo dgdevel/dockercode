@@ -17,9 +17,11 @@ RUN pacman -S --noconfirm python python-pip uv go rustup
 
 # opencode deps
 RUN pacman -S --noconfirm nodejs npm bun
-COPY root/. /
 
-RUN useradd -d /home/coder -M -s /usr/bin/bash coder
+ARG USER_UID=1000
+ARG USER_GID=1000
+RUN groupadd -g ${USER_GID} coder
+RUN useradd -d /home/coder -M -s /usr/bin/bash -u ${USER_UID} -g ${USER_GID} coder
 RUN echo 'coder ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 USER coder
@@ -40,10 +42,9 @@ WORKDIR /
 # DO NOT REMOVE: REPLACED BY BUILD SCRIPT
 INCLUDED_EXTENSION
 
+COPY root/. /
 USER coder
 WORKDIR /home/coder
-
-VOLUME [ "/home/coder" ]
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
