@@ -6,7 +6,7 @@
 if [ ! -f /home/coder/.bashrc ] ; then
   sudo chown -R coder:coder /home/coder
   find /etc/skel/ -type f -exec cp '{}' /home/coder \;
-  echo 'PATH=$PATH:$HOME/node_modules/.bin/' >> /home/coder/.bashrc
+  echo 'PATH=$PATH:$HOME/.bun/bin/' >> /home/coder/.bashrc
 fi
 
 cd /home/coder
