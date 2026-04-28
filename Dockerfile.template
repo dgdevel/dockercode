@@ -4,7 +4,7 @@ RUN pacman -Syu --noconfirm
 RUN pacman -S --noconfirm sudo
 
 # dev utils - generic
-RUN pacman -S --noconfirm vim htop tmux strace lsof
+RUN pacman -S --noconfirm vim htop tmux strace lsof hex
 # dev utils - networking
 RUN pacman -S --noconfirm curl wget ca-certificates ca-certificates-mozilla ca-certificates-utils tcpdump bind iputils net-tools
 # dev utils - versioning
