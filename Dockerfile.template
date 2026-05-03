@@ -4,9 +4,9 @@ RUN pacman -Syu --noconfirm
 RUN pacman -S --noconfirm sudo
 
 # dev utils - generic
-RUN pacman -S --noconfirm vim htop tmux strace lsof hex ripgrep the_silver_searcher
+RUN pacman -S --noconfirm vim htop tmux strace lsof hex ripgrep the_silver_searcher tree
 # dev utils - networking
-RUN pacman -S --noconfirm curl wget ca-certificates ca-certificates-mozilla ca-certificates-utils tcpdump bind iputils net-tools
+RUN pacman -S --noconfirm curl wget ca-certificates ca-certificates-mozilla ca-certificates-utils tcpdump bind iputils net-tools openbsd-netcat
 # dev utils - versioning
 RUN pacman -S --noconfirm git
 # dev utils - archives
