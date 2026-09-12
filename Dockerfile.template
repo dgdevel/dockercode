@@ -38,6 +38,9 @@ RUN makepkg -cs --noconfirm
 USER root
 RUN pacman -U --noconfirm pacaur-*.tar.zst
 
+# dev utils - AppImage support (FUSE userland)
+RUN pacman -S --noconfirm fuse2 fuse3 squashfs-tools
+
 # opencode desktop (GUI app) - runtime deps
 RUN pacman -S --noconfirm mesa noto-fonts wayland-utils
 # opencode desktop app - AUR

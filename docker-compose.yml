@@ -24,6 +24,16 @@ services:
       - /run/user/${USER_UID:-1000}:/run/user/${USER_UID:-1000}
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /dev/dri:/dev/dri
+      # FUSE for AppImages: bind the device when present (if missing, Docker
+      # creates an empty dir and AppImages just refuse to mount), and allow its
+      # standard char device (10:229) in the device cgroup
+      - /dev/fuse:/dev/fuse
+    device_cgroup_rules:
+      - "c 10:229 rwm"
+    # fusermount performs the mount(2), which the kernel only allows with
+    # CAP_SYS_ADMIN - Docker's default capability set omits it
+    cap_add:
+      - SYS_ADMIN
     # GIDs of the host video/render groups, exported by bin/run.sh, so the
     # container user may access /dev/dri
     group_add:
@@ -40,6 +50,9 @@ services:
       - DISPLAY=${DISPLAY:-}
       - XAUTHORITY=${XAUTHORITY:-}
       - ELECTRON_OZONE_PLATFORM_HINT=${ELECTRON_OZONE_PLATFORM_HINT:-x11}
+      # URL opener of last resort for tools that consult $BROWSER directly;
+      # the shim prints URLs instead of failing to find a browser
+      - BROWSER=/usr/local/bin/xdg-open
       # session/runtime sockets live in the mounted XDG_RUNTIME_DIR; without the
       # bus address, Electron apps block on session-bus calls at startup
       - WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}

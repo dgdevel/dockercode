@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# No browser exists inside the container: print URLs so they can be opened on
+# the host instead of silently failing. Exit 0 so caller flows (e.g. OAuth
+# device-code polling) keep going.
+# URLs are also appended to /tmp/xdg-open.log because some callers detach or
+# redirect the child's output, so the URL may not reach the terminal.
+
+log=/tmp/xdg-open.log
+
+for url in "$@"; do
+  case "$url" in
+    *://*)
+      echo "no browser in container, open this on the host:" >&2
+      echo "$url"
+      echo "$(date '+%F %T') $url" >> "$log"
+      ;;
+  esac
+done

@@ -11,6 +11,8 @@ A Docker container for running [opencode](https://opencode.ai) with a preconfigu
 - **opencode dependencies:** Node.js, npm, Bun
 - **Presets:** `opencode-ai` and `skills` packages are installed and updated automatically on startup
 - **GUI:** opencode desktop (`opencode-desktop-bin`, AUR) plus Mesa/fonts, rendered on the host's Wayland session
+- **AppImages:** FUSE userland (`fuse2`/`fuse3`) + `squashfs-tools`; `/dev/fuse` is passed through when present, with `CAP_SYS_ADMIN` for the mount
+- **URLs:** there is no browser in the container; `xdg-open` (and `$BROWSER`) print URLs to the terminal so they can be opened on the host — auth flows that poll for browser completion keep working
 
 ## Usage
 
