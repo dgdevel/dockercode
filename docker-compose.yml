@@ -9,17 +9,46 @@ services:
     image: dockercode
     stdin_open: true
     tty: true
+    # Docker defaults /dev/shm to 64MB; Chromium/Electron exhaust it and the
+    # GPU process dies (crash-loop + core dumps on the host)
+    shm_size: "1gb"
+    # Chromium/Electron apps build their sandbox on user namespaces
+    # (clone with CLONE_NEWUSER), which Docker's default seccomp profile
+    # denies. Alternative: launch them with --no-sandbox instead.
+    security_opt:
+      - seccomp=unconfined
     volumes:
       - ./homedir:/home/coder
+      # GUI: host display session (Wayland socket + XWayland) and GPU.
+      # Missing host paths are auto-created empty, apps then fall back to software rendering.
+      - /run/user/${USER_UID:-1000}:/run/user/${USER_UID:-1000}
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /dev/dri:/dev/dri
+    # GIDs of the host video/render groups, exported by bin/run.sh, so the
+    # container user may access /dev/dri
+    group_add:
+      - "${VIDEO_GID:-998}"
+      - "${RENDER_GID:-999}"
     environment:
       - TERM=${TERM}
       - COLUMNS=${COLUMNS}
       - LINES=${LINES}
+      # X11 through the host's XWayland. Native Wayland is currently broken for
+      # Electron apps in this setup (window is created hidden and ready-to-show
+      # never fires, so it never gets shown; the GPU process also crash-loops).
+      # Test native Wayland with: ELECTRON_OZONE_PLATFORM_HINT=wayland
+      - DISPLAY=${DISPLAY:-}
+      - XAUTHORITY=${XAUTHORITY:-}
+      - ELECTRON_OZONE_PLATFORM_HINT=${ELECTRON_OZONE_PLATFORM_HINT:-x11}
+      # session/runtime sockets live in the mounted XDG_RUNTIME_DIR; without the
+      # bus address, Electron apps block on session-bus calls at startup
+      - WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
+      - XDG_RUNTIME_DIR=/run/user/${USER_UID:-1000}
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${USER_UID:-1000}/bus
     ports:
       - "127.0.0.1:4096:4096"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     dns:
       - 1.1.1.1
-
 

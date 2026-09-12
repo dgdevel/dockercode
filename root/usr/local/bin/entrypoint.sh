@@ -16,5 +16,11 @@ bun add opencode-ai
 bun add skills
 bun add add-mcp
 
-# launch user shell
-bash $*
+# expose bun-installed binaries to non-interactive launches too
+export PATH="$HOME/.bun/bin:$PATH"
+
+# start the requested app (e.g. opencode or opencode-desktop), or a shell
+if [ $# -gt 0 ]; then
+  exec "$@"
+fi
+exec bash
