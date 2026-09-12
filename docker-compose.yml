@@ -54,7 +54,10 @@ services:
       # the shim prints URLs instead of failing to find a browser
       - BROWSER=/usr/local/bin/xdg-open
       # session/runtime sockets live in the mounted XDG_RUNTIME_DIR; without the
-      # bus address, Electron apps block on session-bus calls at startup
+      # bus address, Electron apps block on session-bus calls at startup.
+      # The entrypoint replaces the host bus with a contained one (see
+      # entrypoint.sh) so GUI apps never reach the host's xdg-desktop-portal,
+      # whose file picker would expose host paths; this stays as the fallback.
       - WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
       - XDG_RUNTIME_DIR=/run/user/${USER_UID:-1000}
       - DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${USER_UID:-1000}/bus

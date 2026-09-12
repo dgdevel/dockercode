@@ -43,6 +43,10 @@ RUN pacman -S --noconfirm fuse2 fuse3 squashfs-tools
 
 # opencode desktop (GUI app) - runtime deps
 RUN pacman -S --noconfirm mesa noto-fonts wayland-utils
+# contained desktop session: Electron/Chromium dialogs are portal-only, so the
+# image ships its own session bus + xdg-desktop-portal; their file picker then
+# browses the container filesystem instead of the host's (see entrypoint.sh)
+RUN pacman -S --noconfirm dbus xdg-desktop-portal xdg-desktop-portal-gtk adwaita-icon-theme
 # opencode desktop app - AUR
 USER coder
 WORKDIR /home/coder
