@@ -11,6 +11,7 @@ A Docker container for running [opencode](https://opencode.ai) with a preconfigu
 - **opencode dependencies:** Node.js, npm, Bun
 - **Presets:** `opencode-ai` and `skills` packages are installed and updated automatically on startup
 - **GUI:** opencode-desktop (`opencode-desktop-bin`, AUR) and support for various apps (provides FUSE, xdg-open wrapper, xdg-desktop-portal support - tested using z.ai zcode AppImage)
+- **Extension points:** via Dockerfile.extension and homedir/bin/entrypoint\_extension.sh to add and customize the container
 
 ## Usage
 
@@ -68,12 +69,3 @@ bin/export.sh
 
 Exports the built image as a compressed `dockercode.tar.xz` archive in the current directory.
 
-## Project layout
-
-```
-bin/          Helper scripts (build, run, shell, clean, export)
-homedir/      Persistent home directory mounted at /home/coder
-root/         Files copied into the image (entrypoint script)
-Dockerfile    Image definition
-docker-compose.yml
-```
