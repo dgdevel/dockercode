@@ -45,6 +45,10 @@ if command -v dbus-run-session >/dev/null 2>&1; then
   export XDG_RUNTIME_DIR="$runtime"
 fi
 
+if [ -f /home/coder/bin/entrypoint_extension.sh ] ; then
+  /home/coder/bin/entrypoint_extension.sh
+fi
+
 # start the requested app (e.g. opencode or opencode-desktop), or a shell,
 # on the contained session bus when one is available
 if [ $# -eq 0 ]; then
