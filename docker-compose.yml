@@ -30,6 +30,11 @@ services:
       - /dev/fuse:/dev/fuse
     device_cgroup_rules:
       - "c 10:229 rwm"
+      # GPU: all DRM nodes (card*, renderD*) are char major 226. Bind-mounting
+      # the /dev/dri *directory* does not add cgroup allow rules (only direct
+      # device-node mounts like /dev/fuse get them), so without this rule
+      # opening the GPU returns EPERM and Mesa falls back to llvmpipe.
+      - "c 226:* rwm"
     # fusermount performs the mount(2), which the kernel only allows with
     # CAP_SYS_ADMIN - Docker's default capability set omits it
     cap_add:

@@ -57,6 +57,13 @@ WORKDIR /
 # DO NOT REMOVE: REPLACED BY BUILD SCRIPT
 INCLUDED_EXTENSION
 
+# GPU acceleration (AMD): mesa (OpenGL, installed above) plus RADV (Vulkan)
+# and VA-API (video decode) make up the full userspace driver stack;
+# mesa-utils (eglinfo/glxinfo) and vulkan-tools (vulkaninfo) verify that
+# apps render on the GPU instead of llvmpipe. Kept below the extension
+# block so this list can change without invalidating the layers above.
+RUN pacman -S --noconfirm vulkan-radeon libva-mesa-driver mesa-utils vulkan-tools
+
 COPY root/. /
 USER coder
 WORKDIR /home/coder

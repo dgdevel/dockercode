@@ -44,6 +44,26 @@ bin/run.sh opencode          # opencode CLI
 bin/run.sh opencode-desktop  # opencode desktop (GUI)
 ```
 
+### GPU
+
+GUI apps render on the host GPU (AMD): the compose file mounts `/dev/dri`,
+adds the host `video`/`render` group GIDs (exported by `bin/run.sh`) to the
+container user, and allows DRM devices (char major 226) in the device cgroup.
+The image ships the full Mesa userspace stack: OpenGL (`radeonsi`), Vulkan
+(`RADV`) and VA-API video decode.
+
+Verify hardware acceleration inside the container with:
+
+```sh
+eglinfo -B -p surfaceless   # renderer should name the GPU, not llvmpipe
+vulkaninfo --summary        # RADV should list the AMD GPU
+glxinfo -B                  # with the GUI running (X11)
+```
+
+If the host has no `/dev/dri`, Docker mounts an empty directory and apps fall
+back to software rendering. NVIDIA GPUs would need the nvidia-container-toolkit
+on the host and `gpus: all` in `docker-compose.yml` instead.
+
 ### Shell into the running container
 
 ```sh
