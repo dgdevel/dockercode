@@ -29,10 +29,19 @@ Starts Docker if needed, and builds the image.
 bin/run.sh [command]
 ```
 
-Starts Docker if needed, and opens an interactive shell (or runs an optional command) inside the container.  
-The `homedir/` directory is mounted as the container's `/home/coder` volume, so your work persists across runs.
+Starts Docker if needed, starts the container in the background, prints its
+address, and opens an interactive shell (or runs an optional command) inside
+it. The `homedir/` directory is mounted as the container's `/home/coder`
+volume, so your work persists across runs.
 
-Port `4096` is forwarded to `localhost:4096`.
+Port `4096` is not published on the host: it is reachable only on the
+container's own IP, which `bin/run.sh` prints at launch (e.g.
+`http://172.18.0.2:4096`).
+
+The container keeps running in the background after the shell is closed.
+Run `bin/run.sh` again (or `bin/shell.sh`) to get back into it, and
+`bin/stop.sh` to stop it. If the image was rebuilt meanwhile, `bin/run.sh`
+detects it and restarts the container on the new image.
 
 ### Choose the CLI or the desktop app
 
@@ -72,6 +81,14 @@ bin/shell.sh
 
 Opens an interactive bash shell inside the running `dockercode` container.  
 Fails with an error if the container is not currently running.
+
+### Stop the container
+
+```sh
+bin/stop.sh
+```
+
+Stops the background container started by `bin/run.sh`.
 
 ### Clean up
 

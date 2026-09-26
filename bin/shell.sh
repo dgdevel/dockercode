@@ -1,11 +1,15 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-image="dockercode:latest"
-ID="$(docker ps --format json | jq "select(.Image=\"$image\") .ID" --raw-output)"
+# Shell into the background container started by bin/run.sh. One-off
+# `docker compose run` containers are invisible to `docker compose ps`,
+# so look them up by compose labels instead.
+cid="$(docker ps -q \
+  --filter label=com.docker.compose.project=dockercode \
+  --filter label=com.docker.compose.service=dockercode | head -n1)"
 
-if [[ "$ID" = "" ]]; then
-  echo "Image $image not running"
+if [ -z "$cid" ]; then
+  echo "dockercode is not running (start it with bin/run.sh)"
   exit 1
 fi
-docker exec -i -t "$ID" /bin/bash
 
+exec docker exec -it "$cid" /bin/bash

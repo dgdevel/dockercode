@@ -35,8 +35,10 @@ host_runtime_dir="$XDG_RUNTIME_DIR"
 if command -v dbus-run-session >/dev/null 2>&1; then
   # private runtime dir keeps the contained bus socket and portal state out
   # of the mounted host dir; the compositor's Wayland socket stays reachable
-  # through a symlink (X11, the supported path, does not use it)
-  runtime=/tmp/dockercode-runtime
+  # through a symlink (X11, the supported path, does not use it).
+  # Unique per run: bin/run.sh execs this entrypoint once per shell, and a
+  # fixed path would let a second session rm -rf the first one's bus+portal.
+  runtime="/tmp/dockercode-runtime.$$"
   rm -rf "$runtime"
   mkdir -m 700 "$runtime"
   if [ -n "$WAYLAND_DISPLAY" ] && [ -e "$host_runtime_dir/$WAYLAND_DISPLAY" ]; then

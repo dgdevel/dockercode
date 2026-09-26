@@ -66,8 +66,10 @@ services:
       - WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
       - XDG_RUNTIME_DIR=/run/user/${USER_UID:-1000}
       - DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${USER_UID:-1000}/bus
-    ports:
-      - "127.0.0.1:4096:4096"
+    # Port 4096 (opencode) is deliberately NOT published on the host: it is
+    # reachable only on the container's own IP (from the host and sibling
+    # containers on the compose network), which bin/run.sh looks up and
+    # prints at launch.
     extra_hosts:
       - "host.docker.internal:host-gateway"
     dns:
