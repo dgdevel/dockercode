@@ -24,20 +24,19 @@ RUN groupadd -g ${USER_GID} coder
 RUN useradd -d /home/coder -M -s /usr/bin/bash -u ${USER_UID} -g ${USER_GID} coder
 RUN echo 'coder ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
 
+RUN echo 'MAKEFLAGS=-j16' >> /etc/makepkg.conf
+
 USER coder
 WORKDIR /home/coder
 RUN git clone https://aur.archlinux.org/auracle-git.git
 WORKDIR /home/coder/auracle-git
-RUN makepkg -cs --noconfirm
-USER root
-RUN pacman -U --noconfirm auracle-git-*.tar.zst
+RUN makepkg -csi --noconfirm
 USER coder
 RUN auracle clone pacaur
 WORKDIR /home/coder/auracle-git/pacaur
-RUN makepkg -cs --noconfirm
-USER root
-RUN pacman -U --noconfirm pacaur-*.tar.zst
+RUN makepkg -csi --noconfirm
 
+USER root
 # dev utils - AppImage support (FUSE userland)
 RUN pacman -S --noconfirm fuse2 fuse3 squashfs-tools
 
@@ -46,16 +45,9 @@ RUN pacman -S --noconfirm mesa noto-fonts wayland-utils
 RUN pacman -S --noconfirm dbus xdg-desktop-portal xdg-desktop-portal-gtk adwaita-icon-theme xdg-utils pcmanfm
 # opencode desktop app - AUR
 USER coder
-WORKDIR /home/coder
-RUN auracle clone opencode-desktop-bin
-WORKDIR /home/coder/opencode-desktop-bin
-RUN makepkg -cs --noconfirm
+ENV VISUAL=/usr/bin/true
+RUN pacaur -S --noconfirm --noedit opencode-desktop-bin
 USER root
-RUN pacman -U --noconfirm opencode-desktop-bin-*.tar.zst
-
-WORKDIR /
-# DO NOT REMOVE: REPLACED BY BUILD SCRIPT
-INCLUDED_EXTENSION
 
 # GPU acceleration (AMD): mesa (OpenGL, installed above) plus RADV (Vulkan)
 # and VA-API (video decode) make up the full userspace driver stack;
@@ -63,6 +55,11 @@ INCLUDED_EXTENSION
 # apps render on the GPU instead of llvmpipe. Kept below the extension
 # block so this list can change without invalidating the layers above.
 RUN pacman -S --noconfirm vulkan-radeon libva-mesa-driver mesa-utils vulkan-tools
+
+WORKDIR /
+# DO NOT REMOVE: REPLACED BY BUILD SCRIPT
+INCLUDED_EXTENSION
+
 
 COPY root/. /
 USER coder
