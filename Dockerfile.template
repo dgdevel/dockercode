@@ -17,37 +17,12 @@ RUN pacman -S --noconfirm python python-pip uv go rustup
 
 # opencode deps
 RUN pacman -S --noconfirm nodejs npm bun
-
-ARG USER_UID=1000
-ARG USER_GID=1000
-RUN groupadd -g ${USER_GID} coder
-RUN useradd -d /home/coder -M -s /usr/bin/bash -u ${USER_UID} -g ${USER_GID} coder
-RUN echo 'coder ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
-
-RUN echo 'MAKEFLAGS=-j16' >> /etc/makepkg.conf
-
-USER coder
-WORKDIR /home/coder
-RUN git clone https://aur.archlinux.org/auracle-git.git
-WORKDIR /home/coder/auracle-git
-RUN makepkg -csi --noconfirm
-USER coder
-RUN auracle clone pacaur
-WORKDIR /home/coder/auracle-git/pacaur
-RUN makepkg -csi --noconfirm
-
-USER root
 # dev utils - AppImage support (FUSE userland)
 RUN pacman -S --noconfirm fuse2 fuse3 squashfs-tools
 
 # opencode desktop (GUI app) - runtime deps
 RUN pacman -S --noconfirm mesa noto-fonts wayland-utils
-RUN pacman -S --noconfirm dbus xdg-desktop-portal xdg-desktop-portal-gtk adwaita-icon-theme xdg-utils pcmanfm
-# opencode desktop app - AUR
-USER coder
-ENV VISUAL=/usr/bin/true
-RUN pacaur -S --noconfirm --noedit opencode-desktop-bin
-USER root
+RUN pacman -S --noconfirm dbus xdg-desktop-portal xdg-desktop-portal-gtk adwaita-icon-theme xdg-utils pcmanfm nspr alsa-lib
 
 # GPU acceleration (AMD): mesa (OpenGL, installed above) plus RADV (Vulkan)
 # and VA-API (video decode) make up the full userspace driver stack;
@@ -56,12 +31,33 @@ USER root
 # block so this list can change without invalidating the layers above.
 RUN pacman -S --noconfirm vulkan-radeon libva-mesa-driver mesa-utils vulkan-tools
 
+ARG USER_UID=1000
+ARG USER_GID=1000
+RUN groupadd -g ${USER_GID} coder
+RUN useradd -d /home/coder -M -s /usr/bin/bash -u ${USER_UID} -g ${USER_GID} coder
+RUN echo 'coder ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
+RUN echo 'MAKEFLAGS=-j16' >> /etc/makepkg.conf
+
+USER coder
+WORKDIR /home/coder
+RUN git clone https://aur.archlinux.org/auracle-git.git
+WORKDIR /home/coder/auracle-git
+RUN makepkg -csi --noconfirm
+RUN auracle clone pacaur
+WORKDIR /home/coder/auracle-git/pacaur
+RUN makepkg -csi --noconfirm
+
+# opencode desktop app - AUR
+USER coder
+ENV VISUAL=/usr/bin/true
+RUN pacaur -S --noconfirm --noedit opencode-desktop-bin
+
+USER root
+COPY root/. /
 WORKDIR /
 # DO NOT REMOVE: REPLACED BY BUILD SCRIPT
 INCLUDED_EXTENSION
 
-
-COPY root/. /
 USER coder
 WORKDIR /home/coder
 
