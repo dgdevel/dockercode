@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Start the container in the background through its entrypoint (opencode
+# updates + contained dbus session/portal daemons) and exit; shells attach
+# afterwards with bin/shell.sh.
+
 docker_active="$(systemctl is-active docker)"
 
 if [ "$docker_active" = inactive ]; then
@@ -25,7 +29,7 @@ cid="$(docker ps -q \
 
 if [ -n "$cid" ]; then
   # a rebuilt image does not update an already running container: restart it
-  # so the next shell runs on the current image, like the old per-launch flow
+  # so the next launch runs on the current image, like the old per-launch flow
   if [ "$(docker inspect -f '{{.Image}}' "$cid")" != "$(docker image inspect -f '{{.Id}}' dockercode:latest)" ]; then
     echo "dockercode: image changed since launch, restarting container"
     docker stop "$cid"
@@ -33,19 +37,16 @@ if [ -n "$cid" ]; then
   fi
 fi
 
-if [ -z "$cid" ]; then
-  # Start the container in the background. `sleep infinity` is a bare
-  # keepalive with the entrypoint bypassed, so the entrypoint side (opencode
-  # updates, contained dbus session) runs exactly once, for the interactive
-  # shell exec'd below, instead of twice.
-  cid="$(docker compose run --rm -d --entrypoint sleep dockercode infinity)"
+if [ -n "$cid" ]; then
+  echo "dockercode already running (shell in with bin/shell.sh, stop with bin/stop.sh)"
+  exit 0
 fi
 
-ip="$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$cid")"
-echo "dockercode container IP: ${ip}"
+# Start the container in the background; the entrypoint idles as a keepalive
+# (sleep infinity) on its contained dbus session, so the session daemons
+# (bus, portal) stay up for the whole container lifetime.
+cid="$(docker compose run --rm -d dockercode)"
 
-# Open the interactive shell (or run the given command) through the
-# entrypoint, which wraps it in the contained dbus session. docker exec
-# allocates its own pty, so TUI apps work even though the background
-# container was started detached (compose skips the service tty then).
-exec docker exec -it "$cid" /usr/local/bin/entrypoint.sh "$@"
+ip="$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$cid")"
+echo "dockercode container started in background (shell in with bin/shell.sh)"
+echo "dockercode container IP: ${ip}"

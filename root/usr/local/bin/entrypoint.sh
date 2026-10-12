@@ -36,8 +36,9 @@ if command -v dbus-run-session >/dev/null 2>&1; then
   # private runtime dir keeps the contained bus socket and portal state out
   # of the mounted host dir; the compositor's Wayland socket stays reachable
   # through a symlink (X11, the supported path, does not use it).
-  # Unique per run: bin/run.sh execs this entrypoint once per shell, and a
-  # fixed path would let a second session rm -rf the first one's bus+portal.
+  # The entrypoint runs once per container (bin/run.sh starts it detached,
+  # shells attach later with bin/shell.sh), so $$ (the container's PID 1)
+  # just keeps boots distinct while rm -rf clears any stale previous boot.
   runtime="/tmp/dockercode-runtime.$$"
   rm -rf "$runtime"
   mkdir -m 700 "$runtime"
@@ -51,12 +52,21 @@ if [ -f /home/coder/bin/entrypoint_extension.sh ] ; then
   /home/coder/bin/entrypoint_extension.sh
 fi
 
-# start the requested app (e.g. opencode or opencode-desktop), or a shell,
-# on the contained session bus when one is available
+# run the requested app (e.g. opencode), or idle as a keepalive: bin/run.sh
+# starts the container detached through this entrypoint, so with no args it
+# must hold the container (and its daemons) up; shells attach afterwards
+# with bin/shell.sh without re-running this script
 if [ $# -eq 0 ]; then
-  set -- bash
+  set -- sleep infinity
 fi
 if command -v dbus-run-session >/dev/null 2>&1; then
-  exec dbus-run-session -- "$@"
+  # publish the contained session's addresses (private runtime dir, session
+  # bus) so attached shells can join this session instead of the host bus
+  exec dbus-run-session -- bash -c '
+    { printf "export XDG_RUNTIME_DIR=%q\n" "$XDG_RUNTIME_DIR"
+      printf "export DBUS_SESSION_BUS_ADDRESS=%q\n" "$DBUS_SESSION_BUS_ADDRESS"
+    } > /tmp/dockercode-session.env
+    exec "$@"
+  ' entrypoint "$@"
 fi
 exec "$@"

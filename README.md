@@ -26,31 +26,31 @@ Starts Docker if needed, and builds the image.
 ### Run the container
 
 ```sh
-bin/run.sh [command]
+bin/run.sh
 ```
 
-Starts Docker if needed, starts the container in the background, prints its
-address, and opens an interactive shell (or runs an optional command) inside
-it. The `homedir/` directory is mounted as the container's `/home/coder`
-volume, so your work persists across runs.
+Starts Docker if needed, then starts the container in the background through
+its entrypoint (opencode updates and the contained dbus session/portal
+daemons run once at boot) and prints its address. It does not attach a
+shell: use `bin/shell.sh` for that. The `homedir/` directory is mounted as
+the container's `/home/coder` volume, so your work persists across runs.
 
 Port `4096` is not published on the host: it is reachable only on the
 container's own IP, which `bin/run.sh` prints at launch (e.g.
 `http://172.18.0.2:4096`).
 
-The container keeps running in the background after the shell is closed.
-Run `bin/run.sh` again (or `bin/shell.sh`) to get back into it, and
-`bin/stop.sh` to stop it. If the image was rebuilt meanwhile, `bin/run.sh`
-detects it and restarts the container on the new image.
+The container keeps running in the background; run `bin/shell.sh` to get
+into it, and `bin/stop.sh` to stop it. If the image was rebuilt meanwhile,
+`bin/run.sh` detects it and restarts the container on the new image.
 
 ### Choose the CLI or the desktop app
 
-Both opencode clients are installed; which one starts is decided when you run the container:
+Both opencode clients are installed; start them from an attached shell:
 
 ```sh
-bin/run.sh                   # interactive shell
-bin/run.sh opencode          # opencode CLI
-bin/run.sh opencode-desktop  # opencode desktop (GUI)
+bin/shell.sh                 # attach, then run what you need
+opencode                     # opencode CLI
+opencode-desktop             # opencode desktop (GUI)
 ```
 
 ### GPU
@@ -79,8 +79,10 @@ on the host and `gpus: all` in `docker-compose.yml` instead.
 bin/shell.sh
 ```
 
-Opens an interactive bash shell inside the running `dockercode` container.  
-Fails with an error if the container is not currently running.
+Opens an interactive bash shell inside the running `dockercode` container,
+joined to the dbus session the entrypoint started at boot (so GUI apps
+reach the contained portal, not the host one). Fails with an error if the
+container is not currently running.
 
 ### Stop the container
 
