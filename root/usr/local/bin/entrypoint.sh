@@ -36,7 +36,7 @@ if command -v dbus-run-session >/dev/null 2>&1; then
   # private runtime dir keeps the contained bus socket and portal state out
   # of the mounted host dir; the compositor's Wayland socket stays reachable
   # through a symlink (X11, the supported path, does not use it).
-  # The entrypoint runs once per container (bin/run.sh starts it detached,
+  # The entrypoint runs once per container (bin/start.sh starts it detached,
   # shells attach later with bin/shell.sh), so $$ (the container's PID 1)
   # just keeps boots distinct while rm -rf clears any stale previous boot.
   runtime="/tmp/dockercode-runtime.$$"
@@ -52,7 +52,7 @@ if [ -f /home/coder/bin/entrypoint_extension.sh ] ; then
   /home/coder/bin/entrypoint_extension.sh
 fi
 
-# run the requested app (e.g. opencode), or idle as a keepalive: bin/run.sh
+# run the requested app (e.g. opencode), or idle as a keepalive: bin/start.sh
 # starts the container detached through this entrypoint, so with no args it
 # must hold the container (and its daemons) up; shells attach afterwards
 # with bin/shell.sh without re-running this script

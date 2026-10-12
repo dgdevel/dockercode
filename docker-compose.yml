@@ -43,7 +43,7 @@ services:
     # CAP_SYS_ADMIN - Docker's default capability set omits it
     cap_add:
       - SYS_ADMIN
-    # GIDs of the host video/render groups, exported by bin/run.sh, so the
+    # GIDs of the host video/render groups, exported by bin/start.sh, so the
     # container user may access /dev/dri
     group_add:
       - "${VIDEO_GID:-998}"
@@ -72,7 +72,7 @@ services:
       - DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${USER_UID:-1000}/bus
     # Port 4096 (opencode) is deliberately NOT published on the host: it is
     # reachable only on the container's own IP (from the host and sibling
-    # containers on the compose network), which bin/run.sh looks up and
+    # containers on the compose network), which bin/start.sh looks up and
     # prints at launch.
     extra_hosts:
       - "host.docker.internal:host-gateway"

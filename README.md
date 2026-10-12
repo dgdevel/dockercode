@@ -26,7 +26,7 @@ Starts Docker if needed, and builds the image.
 ### Run the container
 
 ```sh
-bin/run.sh
+bin/start.sh
 ```
 
 Starts Docker if needed, then starts the container in the background through
@@ -36,12 +36,12 @@ shell: use `bin/shell.sh` for that. The `homedir/` directory is mounted as
 the container's `/home/coder` volume, so your work persists across runs.
 
 Port `4096` is not published on the host: it is reachable only on the
-container's own IP, which `bin/run.sh` prints at launch (e.g.
+container's own IP, which `bin/start.sh` prints at launch (e.g.
 `http://172.18.0.2:4096`).
 
 The container keeps running in the background; run `bin/shell.sh` to get
 into it, and `bin/stop.sh` to stop it. If the image was rebuilt meanwhile,
-`bin/run.sh` detects it and restarts the container on the new image.
+`bin/start.sh` detects it and restarts the container on the new image.
 
 ### Choose the CLI or the desktop app
 
@@ -56,7 +56,7 @@ opencode-desktop             # opencode desktop (GUI)
 ### GPU
 
 GUI apps render on the host GPU (AMD): the compose file mounts `/dev/dri`,
-adds the host `video`/`render` group GIDs (exported by `bin/run.sh`) to the
+adds the host `video`/`render` group GIDs (exported by `bin/start.sh`) to the
 container user, and allows DRM devices (char major 226) in the device cgroup.
 The image ships the full Mesa userspace stack: OpenGL (`radeonsi`), Vulkan
 (`RADV`) and VA-API video decode.
@@ -90,7 +90,7 @@ container is not currently running.
 bin/stop.sh
 ```
 
-Stops the background container started by `bin/run.sh`.
+Stops the background container started by `bin/start.sh`.
 
 ### Clean up
 
