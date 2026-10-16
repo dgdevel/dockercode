@@ -13,6 +13,8 @@ cd /home/coder
 
 # update opencode
 bun add opencode-ai
+# oc2
+bun add @opencode/cli
 bun add skills
 bun add add-mcp
 
