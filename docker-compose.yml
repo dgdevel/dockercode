@@ -43,12 +43,15 @@ services:
     # CAP_SYS_ADMIN - Docker's default capability set omits it
     cap_add:
       - SYS_ADMIN
-    # GIDs of the host video/render groups, exported by bin/start.sh, so the
+    # GIDs of the host video/render groups, exported by bin/start-gui.sh, so the
     # container user may access /dev/dri
     group_add:
       - "${VIDEO_GID:-998}"
       - "${RENDER_GID:-999}"
     environment:
+      # mode switch read by the entrypoint: gui (this service) runs the
+      # contained dbus session/portal; console (dockercode-console) skips it
+      - DOCKERCODE_MODE=gui
       - TERM=${TERM}
       - COLUMNS=${COLUMNS}
       - LINES=${LINES}
@@ -72,8 +75,32 @@ services:
       - DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${USER_UID:-1000}/bus
     # Port 4096 (opencode) is deliberately NOT published on the host: it is
     # reachable only on the container's own IP (from the host and sibling
-    # containers on the compose network), which bin/start.sh looks up and
+    # containers on the compose network), which bin/start-gui.sh looks up and
     # prints at launch.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    dns:
+      - 1.1.1.1
+
+  # Text-console-only twin of dockercode: same image and homedir, but no GUI
+  # wiring at all - no host display/GPU/device mounts, no extra capabilities
+  # or group_add, no contained dbus session/portal in the entrypoint
+  # (DOCKERCODE_MODE=console makes it skip all that). Use it with
+  # bin/start-console.sh when only terminal tools are needed: smaller attack
+  # surface and no dependency on the host's X/Wayland session being up.
+  dockercode-console:
+    image: dockercode
+    stdin_open: true
+    tty: true
+    shm_size: "1gb"
+    volumes:
+      - ./homedir:/home/coder
+    environment:
+      - DOCKERCODE_MODE=console
+      - TERM=${TERM}
+      - COLUMNS=${COLUMNS}
+      - LINES=${LINES}
+      - BROWSER=/usr/local/bin/xdg-open
     extra_hosts:
       - "host.docker.internal:host-gateway"
     dns:

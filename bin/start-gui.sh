@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Start the container in the background through its entrypoint (opencode
+# Start the GUI container in the background through its entrypoint (opencode
 # updates + contained dbus session/portal daemons) and exit; shells attach
 # afterwards with bin/shell.sh.
 

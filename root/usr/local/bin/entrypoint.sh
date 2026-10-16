@@ -34,11 +34,14 @@ export PATH="$HOME/.bun/bin:$PATH"
 # following) are traded away; the host bus stays reachable at
 # /run/user/<uid>/bus for opt-in use.
 host_runtime_dir="$XDG_RUNTIME_DIR"
-if command -v dbus-run-session >/dev/null 2>&1; then
+# DOCKERCODE_MODE=console (bin/start-console.sh) skips the contained session:
+# terminal-only tools need no portal isolation, and the console service has
+# no host runtime dir mounted anyway
+if [ "${DOCKERCODE_MODE:-gui}" != console ] && command -v dbus-run-session >/dev/null 2>&1; then
   # private runtime dir keeps the contained bus socket and portal state out
   # of the mounted host dir; the compositor's Wayland socket stays reachable
   # through a symlink (X11, the supported path, does not use it).
-  # The entrypoint runs once per container (bin/start.sh starts it detached,
+  # The entrypoint runs once per container (bin/start-gui.sh starts it detached,
   # shells attach later with bin/shell.sh), so $$ (the container's PID 1)
   # just keeps boots distinct while rm -rf clears any stale previous boot.
   runtime="/tmp/dockercode-runtime.$$"
@@ -54,14 +57,14 @@ if [ -f /home/coder/bin/entrypoint_extension.sh ] ; then
   /home/coder/bin/entrypoint_extension.sh
 fi
 
-# run the requested app (e.g. opencode), or idle as a keepalive: bin/start.sh
+# run the requested app (e.g. opencode), or idle as a keepalive: bin/start-gui.sh
 # starts the container detached through this entrypoint, so with no args it
 # must hold the container (and its daemons) up; shells attach afterwards
 # with bin/shell.sh without re-running this script
 if [ $# -eq 0 ]; then
   set -- sleep infinity
 fi
-if command -v dbus-run-session >/dev/null 2>&1; then
+if [ "${DOCKERCODE_MODE:-gui}" != console ] && command -v dbus-run-session >/dev/null 2>&1; then
   # publish the contained session's addresses (private runtime dir, session
   # bus) so attached shells can join this session instead of the host bus
   exec dbus-run-session -- bash -c '
