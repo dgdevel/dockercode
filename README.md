@@ -47,7 +47,8 @@ into it, and `bin/stop.sh` to stop it. If the image was rebuilt meanwhile,
 ### Run the text-console-only container
 
 ```sh
-bin/start-console.sh
+bin/start-console.sh        # Linux
+bin\start-console.ps1       # Windows (Docker Desktop + WSL2, console mode only)
 ```
 
 Same image, same `homedir/` volume, but started from the
@@ -61,6 +62,40 @@ way. The
 GUI and console containers share `homedir/`, so `bin/start-console.sh`
 refuses to run while the GUI one is up (their entrypoints would race on
 the same bun packages); stop one before starting the other.
+
+### Windows (console mode only)
+
+On Windows the repo runs the text-console container through PowerShell twins
+of the bash scripts, with these differences from Linux:
+
+- GUI mode stays Linux-only for now (no host X/Wayland session to wire).
+- `bin/build.ps1`, `bin/start-console.ps1`, `bin/shell.ps1`, `bin/stop.ps1`,
+  `bin/clean-image.ps1` mirror the `.sh` counterparts; no `systemctl` - they
+  start Docker Desktop themselves and wait for the engine.
+- The homedir is NOT the `./homedir` bind: the scripts set
+  `DOCKERCODE_HOME=dockercode-home`, so compose mounts the named ext4 volume
+  `dockercode-home` at `/home/coder` instead (the compose switch
+  `${DOCKERCODE_HOME:-./homedir}` keeps Linux behavior unchanged). A named
+  volume is much faster than an NTFS bind for the nested dockerd writes,
+  but it is not browsable in Explorer: access files only through
+  `bin/shell.ps1` or `docker cp`. Wipe it with
+  `docker volume rm dockercode-home`.
+- `USER_UID`/`USER_GID` are forced to 1000 (the Git Bash `id -u` returns a
+  Windows SID number, meaningless inside the container).
+- If Docker Desktop was installed with the legacy vhdx layout, the disk
+  image only ever grows. `bin/compact-vhdx.ps1` quits Docker Desktop, runs
+  `wsl --shutdown`, and compacts the vhdx (Optimize-VHD on Pro, diskpart
+  fallback on Home), then restarts Docker Desktop. Run `bin/stop.ps1`
+  first: running containers are killed by the shutdown.
+
+```powershell
+bin\build.ps1
+bin\start-console.ps1
+bin\shell.ps1               # interactive bash inside
+bin\stop.ps1
+bin\compact-vhdx.ps1        # reclaim vhdx disk space
+```
+
 
 ### Docker-in-docker
 

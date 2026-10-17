@@ -23,7 +23,11 @@ services:
     # so the former security_opt/cap_add/device_cgroup_rules grants are gone.
     privileged: true
     volumes:
-      - ./homedir:/home/coder
+      # host-side source is switchable: Linux default keeps the ./homedir
+      # bind; Windows (bin/*.ps1) sets DOCKERCODE_HOME=dockercode-home to use
+      # the named ext4 volume instead (fast: the nested dockerd writes a lot).
+      # The declared-but-unused top-level volume is harmless on Linux.
+      - ${DOCKERCODE_HOME:-./homedir}:/home/coder
       # GUI: host display session (Wayland socket + XWayland) and GPU.
       # Missing host paths are auto-created empty, apps then fall back to software rendering.
       - /run/user/${USER_UID:-1000}:/run/user/${USER_UID:-1000}
@@ -84,7 +88,11 @@ services:
     tty: true
     shm_size: "1gb"
     volumes:
-      - ./homedir:/home/coder
+      # host-side source is switchable: Linux default keeps the ./homedir
+      # bind; Windows (bin/*.ps1) sets DOCKERCODE_HOME=dockercode-home to use
+      # the named ext4 volume instead (fast: the nested dockerd writes a lot).
+      # The declared-but-unused top-level volume is harmless on Linux.
+      - ${DOCKERCODE_HOME:-./homedir}:/home/coder
     # privileged for docker-in-docker, same as the GUI service
     privileged: true
     environment:
@@ -98,3 +106,5 @@ services:
     dns:
       - 1.1.1.1
 
+volumes:
+  dockercode-home:
