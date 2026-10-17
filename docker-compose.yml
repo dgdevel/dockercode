@@ -16,11 +16,12 @@ services:
     # Docker defaults /dev/shm to 64MB; Chromium/Electron exhaust it and the
     # GPU process dies (crash-loop + core dumps on the host)
     shm_size: "1gb"
-    # Chromium/Electron apps build their sandbox on user namespaces
-    # (clone with CLONE_NEWUSER), which Docker's default seccomp profile
-    # denies. Alternative: launch them with --no-sandbox instead.
-    security_opt:
-      - seccomp=unconfined
+    # Privileged for docker-in-docker: a contained dockerd runs from the
+    # entrypoint (nested containers are invisible to the host daemon).
+    # Privileged also unconfines seccomp (the Chromium/Electron user-namespace
+    # sandbox needs that) and grants CAP_SYS_ADMIN plus full device access,
+    # so the former security_opt/cap_add/device_cgroup_rules grants are gone.
+    privileged: true
     volumes:
       - ./homedir:/home/coder
       # GUI: host display session (Wayland socket + XWayland) and GPU.
@@ -32,17 +33,6 @@ services:
       # creates an empty dir and AppImages just refuse to mount), and allow its
       # standard char device (10:229) in the device cgroup
       - /dev/fuse:/dev/fuse
-    device_cgroup_rules:
-      - "c 10:229 rwm"
-      # GPU: all DRM nodes (card*, renderD*) are char major 226. Bind-mounting
-      # the /dev/dri *directory* does not add cgroup allow rules (only direct
-      # device-node mounts like /dev/fuse get them), so without this rule
-      # opening the GPU returns EPERM and Mesa falls back to llvmpipe.
-      - "c 226:* rwm"
-    # fusermount performs the mount(2), which the kernel only allows with
-    # CAP_SYS_ADMIN - Docker's default capability set omits it
-    cap_add:
-      - SYS_ADMIN
     # GIDs of the host video/render groups, exported by bin/start-gui.sh, so the
     # container user may access /dev/dri
     group_add:
@@ -83,11 +73,11 @@ services:
       - 1.1.1.1
 
   # Text-console-only twin of dockercode: same image and homedir, but no GUI
-  # wiring at all - no host display/GPU/device mounts, no extra capabilities
-  # or group_add, no contained dbus session/portal in the entrypoint
-  # (DOCKERCODE_MODE=console makes it skip all that). Use it with
-  # bin/start-console.sh when only terminal tools are needed: smaller attack
-  # surface and no dependency on the host's X/Wayland session being up.
+  # wiring at all - no host display/GPU/device mounts or group_add, no
+  # contained dbus session/portal in the entrypoint (DOCKERCODE_MODE=console
+  # makes it skip all that). Still privileged for docker-in-docker. Use it
+  # with bin/start-console.sh when only terminal tools are needed: no
+  # dependency on the host's X/Wayland session being up.
   dockercode-console:
     image: dockercode
     stdin_open: true
@@ -95,6 +85,8 @@ services:
     shm_size: "1gb"
     volumes:
       - ./homedir:/home/coder
+    # privileged for docker-in-docker, same as the GUI service
+    privileged: true
     environment:
       - DOCKERCODE_MODE=console
       - TERM=${TERM}

@@ -21,6 +21,27 @@ bun add add-mcp
 # expose bun-installed binaries to non-interactive launches too
 export PATH="$HOME/.bun/bin:$PATH"
 
+# Docker-in-docker daemon
+#
+# The services run privileged (docker-compose.yml) so a contained dockerd
+# works; nested containers are invisible to the host daemon. The data root
+# lives under the persistent homedir mount, so nested images/containers
+# survive restarts and rebuilds. vfs storage driver: overlay2 nested on the
+# host's overlay filesystem is unreliable (Docker refuses or corrupts), and
+# fuse-overlayfs needs extra setup; vfs is slower but dependable. dockerd
+# keeps running as an orphan of this script's later exec; it dies with the
+# container.
+sudo dockerd --data-root "$HOME/.local/share/docker" --storage-driver vfs \
+  --group docker >/tmp/dockerd.log 2>&1 &
+for _ in $(seq 1 30); do
+  docker info >/dev/null 2>&1 && break
+  sleep 1
+done
+if ! docker info >/dev/null 2>&1; then
+  echo "dockercode: dockerd did not come up (tail of /tmp/dockerd.log):" >&2
+  tail -n 20 /tmp/dockerd.log >&2
+fi
+
 # Contained desktop session
 #
 # GUI apps reach the *host* session bus through the mounted XDG_RUNTIME_DIR,

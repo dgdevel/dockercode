@@ -15,6 +15,9 @@ RUN pacman -S --noconfirm unzip gzip
 # dev utils - lang misc and package managers
 RUN pacman -S --noconfirm python python-pip uv go rustup
 
+# docker-in-docker: CLI tools only, the daemon is started by the entrypoint
+RUN pacman -S --noconfirm docker docker-compose docker-buildx
+
 # opencode deps
 RUN pacman -S --noconfirm nodejs npm bun
 # dev utils - AppImage support (FUSE userland)
@@ -36,6 +39,9 @@ ARG USER_GID=1000
 RUN groupadd -g ${USER_GID} coder
 RUN useradd -d /home/coder -M -s /usr/bin/bash -u ${USER_UID} -g ${USER_GID} coder
 RUN echo 'coder ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
+# docker-in-docker: membership in the docker group lets coder talk to the
+# entrypoint-started dockerd socket without sudo
+RUN usermod -aG docker coder
 RUN echo 'MAKEFLAGS=-j16' >> /etc/makepkg.conf
 
 USER coder

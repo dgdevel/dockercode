@@ -11,6 +11,7 @@ A Docker container for running [opencode](https://opencode.ai) with a preconfigu
 - **opencode dependencies:** Node.js, npm, Bun
 - **Presets:** `opencode-ai` and `skills` packages are installed and updated automatically on startup
 - **GUI:** opencode-desktop (`opencode-desktop-bin`, AUR) and support for various apps (provides FUSE, xdg-open wrapper, xdg-desktop-portal support - tested using z.ai zcode AppImage)
+- **Docker-in-docker:** contained rootful `dockerd` started by the entrypoint, CLI (`docker`, `docker compose`, `docker buildx`) usable without sudo
 - **Extension points:** via Dockerfile.extension and homedir/bin/entrypoint\_extension.sh to add and customize the container
 
 ## Usage
@@ -51,14 +52,35 @@ bin/start-console.sh
 
 Same image, same `homedir/` volume, but started from the
 `dockercode-console` compose service: no GUI wiring at all - no host
-display/GPU/device mounts, no extra capabilities, and the entrypoint
-skips the contained dbus session/portal (`DOCKERCODE_MODE=console`).
-Use it when only terminal applications (opencode CLI, tmux, etc.) are
-needed: smaller attack surface and no dependency on the host's X/Wayland
-session. `bin/shell.sh` and `bin/stop.sh` work on it the same way. The
+display/GPU/device mounts - and the entrypoint skips the contained dbus
+session/portal (`DOCKERCODE_MODE=console`); it still runs privileged for
+docker-in-docker. Use it when only terminal applications (opencode CLI,
+tmux, etc.) are needed: no GUI wiring and no dependency on the host's
+X/Wayland session. `bin/shell.sh` and `bin/stop.sh` work on it the same
+way. The
 GUI and console containers share `homedir/`, so `bin/start-console.sh`
 refuses to run while the GUI one is up (their entrypoints would race on
 the same bun packages); stop one before starting the other.
+
+### Docker-in-docker
+
+Both containers run privileged and their entrypoint boots a contained
+`dockerd` (rootful) with its data root at `~/.local/share/docker` on the
+`homedir/` volume: `docker`, `docker compose`, and `docker buildx` work
+inside, nested containers are invisible to the host daemon, and nested
+images/containers/volumes survive restarts and rebuilds. `coder` talks to
+the daemon socket through its `docker` group membership - no sudo needed.
+
+Notes:
+
+- The vfs storage driver is used (overlay2 nested on the host overlay
+  filesystem is unreliable); image pulls and builds inside are slower.
+- The daemon lives only as long as the container: `bin/stop.sh` stops it
+  and all nested containers with it (data persists, running state does not).
+- Nested containers get their own network through the contained daemon;
+  published ports live inside the dockercode container, not on the host.
+- `privileged` makes the container host-root-equivalent, same as running
+  dockerd anywhere without care: trust what you run inside.
 
 ### Choose the CLI or the desktop app
 
