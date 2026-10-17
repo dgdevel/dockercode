@@ -20,11 +20,10 @@ $ErrorActionPreference = 'Stop'
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
     ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $isAdmin) {
-    Start-Process powershell -Verb RunAs -Wait -ArgumentList @(
-        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $PSCommandPath,
-        $(if ($NoRestart) { '-NoRestart' })
-    )
-    exit $LASTEXITCODE
+    $elevArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $PSCommandPath)
+    if ($NoRestart) { $elevArgs += '-NoRestart' }
+    Start-Process powershell -Verb RunAs -Wait -ArgumentList $elevArgs
+    exit 0
 }
 
 # --- 2. stop Docker Desktop + WSL -------------------------------------------
@@ -75,7 +74,7 @@ else {
 }
 
 $after = (Get-Item $vhdx).Length
-Write-Output ("  size after:  {0:N1} GB (freed {1:N1} GB)" -f ($after / 1GB, (($before - $after) / 1GB)))
+Write-Output ("  size after:  {0:N1} GB (freed {1:N1} GB)" -f ($after / 1GB), (($before - $after) / 1GB))
 
 # --- 5. restart --------------------------------------------------------------
 if (-not $NoRestart) {
