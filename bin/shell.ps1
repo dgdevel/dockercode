@@ -26,6 +26,14 @@ if (-not $cid) {
 
 # same inner bootstrap as bin/shell.sh: wait for the boot session env in GUI
 # mode, then drop into an interactive bash
+#
+# NOTE: the script is passed base64-encoded. Windows PowerShell 5.1 mangles
+# multiline arguments given to native commands (it strips the embedded
+# double quotes and squashes the newlines), so feeding $inner straight to
+# `docker exec ... bash -c $inner` makes bash receive a truncated one-liner
+# and die with "syntax error: unexpected end of file". base64 is immune to
+# that, and `bash -c` on the decoder line takes over the exec'd TTY via the
+# trailing `exec bash -i` inside $inner.
 $inner = @'
 env_file=/tmp/dockercode-session.env
 if [ "${DOCKERCODE_MODE:-gui}" != console ] && [ ! -f "$env_file" ]; then
@@ -43,5 +51,12 @@ fi
 exec bash -i
 '@
 
-docker exec -it $cid bash -c $inner
+# decode-and-run via base64: see NOTE above. `base64 -d` (coreutils) exists
+# in the image; [Convert]::ToBase64String emits one line, no embedded spaces.
+# The script is fed through process substitution (<(...)), NOT a pipe: with
+# `printf ... | base64 -d | bash` the last bash reads the script from stdin
+# (the pipe), so the inner `exec bash -i` inherits that already-EOF pipe and
+# dies at once, as if Ctrl+D was pressed
+$payload = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($inner))
+docker exec -it $cid bash -c "exec bash <(printf %s $payload | base64 -d)"
 exit $LASTEXITCODE
